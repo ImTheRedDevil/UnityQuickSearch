@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Search;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -67,8 +68,14 @@ namespace com.virtulope.quicksearch.Editor
                 if (_searchText != "")
                 {
                     var searchResults = AssetDatabase.FindAssets(_searchText, new[] { "Assets/" });
+                    searchResults = searchResults.Where(sr => !AssetDatabase.IsValidFolder(AssetDatabase.GUIDToAssetPath(sr))).ToArray();
                     _searchResults.AddRange(searchResults);
-                    _searchResults = _searchResults.OrderBy(r=> Path.GetFileName(AssetDatabase.GUIDToAssetPath(r))).ToList();
+                    _searchResults = _searchResults.OrderBy(r=>
+                    {
+                        long score = 0;
+                        FuzzySearch.FuzzyMatch(_searchText, Path.GetFileName(AssetDatabase.GUIDToAssetPath(r)), ref score);
+                        return score;
+                    }).Reverse().ToList();
                 }
             }
 
@@ -95,11 +102,6 @@ namespace com.virtulope.quicksearch.Editor
             foreach (var result in results)
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(result);
-                if (AssetDatabase.IsValidFolder(assetPath))
-                {
-                    continue;
-                }
-                
                 if (GUILayout.Button(Path.GetFileName(assetPath)))
                 {
                     ButtonPressed(result);
