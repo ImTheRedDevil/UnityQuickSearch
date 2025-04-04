@@ -1,0 +1,15 @@
+﻿{
+  "name": "com.virtulope.quicksearch",
+  "version": "0.1.0",
+  "displayName": "Quick Search",
+  "description": "Search but quick.",
+  "unity": "2022.3",
+  "keywords": [
+    "search",
+    "quick"
+  ],
+  "author": {
+    "name": "TheRedDevil",
+    "email": "sosko.dodo@gmail.com"
+  }
+}
