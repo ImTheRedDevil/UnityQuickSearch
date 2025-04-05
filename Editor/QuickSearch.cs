@@ -13,7 +13,7 @@ namespace com.virtulope.quicksearch.Editor
         private const float WindowWidthPercent = 0.45f;
         private const float WindowHeightPercent = 0.40f;
 
-        private static GUIStyle _searchBoxStyle;
+        private static GUIStyle _searchBoxStyle, _buttonStyle;
 
         private string _searchText = "";
 
@@ -116,7 +116,7 @@ namespace com.virtulope.quicksearch.Editor
                 }
                 
                 var assetPath = AssetDatabase.GUIDToAssetPath(results[i]);
-                if (GUILayout.Button(Path.GetFileName(assetPath)))
+                if (GUILayout.Button(Path.GetFileName(assetPath), _buttonStyle))
                 {
                     ButtonPressed(results[i]);
                 }
@@ -203,6 +203,12 @@ namespace com.virtulope.quicksearch.Editor
                 margin = new RectOffset(0, 0, 0, 0)
             };
             _searchBoxStyle.fixedHeight = _searchBoxStyle.lineHeight * 1.6f;
+
+            _buttonStyle = new GUIStyle(GUI.skin.button)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                margin = new RectOffset(0, 0, 0, 0),
+            };
         }
         
         public class QuickSearchSingleton : ScriptableSingleton<QuickSearchSingleton>
