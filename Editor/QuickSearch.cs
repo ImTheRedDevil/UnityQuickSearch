@@ -21,6 +21,8 @@ namespace com.virtulope.quicksearch.Editor
         private static EditorWindow _window;
 
         private bool _showHistoryOnEnable;
+
+        private int _currentSelectedIndex = 0;
         
         [MenuItem("Tools/QuickSearch %t")]
         public static void OpenSearch()
@@ -58,11 +60,15 @@ namespace com.virtulope.quicksearch.Editor
 
         public void OnGUI()
         {
+            HandleEnterPress();
+            HandleArrowPress();
+            
             GUI.SetNextControlName("searchbar");
             EditorGUI.BeginChangeCheck();
             _searchText = GUILayout.TextField(_searchText);
             if (EditorGUI.EndChangeCheck())
             {
+                _currentSelectedIndex = 0;
                 _showHistoryOnEnable = false;
                 _searchResults.Clear();
                 if (_searchText != "")
@@ -79,33 +85,36 @@ namespace com.virtulope.quicksearch.Editor
                 }
             }
 
-            SpawnButtons(_searchText == "" || _showHistoryOnEnable ? _history.ToList() : _searchResults.ToList());
-            
-            if (Event.current.keyCode == KeyCode.Return)
+            if (_searchText == "" || _showHistoryOnEnable)
             {
-                if (_searchResults.Count > 0)
-                {
-                    ButtonPressed(_searchResults[0]);
-                }
-
-                if (_history.Count > 0)
-                {
-                    ButtonPressed(_history[0]);
-                }
+                _showHistoryOnEnable = false;
+                _searchResults = _history.ToList();
             }
+
+            SpawnButtons(_searchResults.ToList());
 
             GUI.FocusControl("searchbar");
         }
 
         private void SpawnButtons(List<string> results)
         {
-            foreach (var result in results)
+            if (_currentSelectedIndex >= results.Count)
+                _currentSelectedIndex = results.Count - 1;
+            
+            for (var i = 0; i < results.Count; i++)
             {
-                var assetPath = AssetDatabase.GUIDToAssetPath(result);
+                if (_currentSelectedIndex == i)
+                {
+                    GUI.backgroundColor = Color.green;
+                }
+                
+                var assetPath = AssetDatabase.GUIDToAssetPath(results[i]);
                 if (GUILayout.Button(Path.GetFileName(assetPath)))
                 {
-                    ButtonPressed(result);
+                    ButtonPressed(results[i]);
                 }
+                
+                GUI.backgroundColor = Color.white;
             }
         }
 
@@ -124,11 +133,62 @@ namespace com.virtulope.quicksearch.Editor
 
         private void AddToHistory(string result)
         {
-            _history.Remove(result);
+            if (_history.Contains(result) && _history[0] != result)
+            {
+                _history.Remove(result);
+            }
             _history = _history.Prepend(result).ToList();
             if (_history.Count > 25)
             {
                 _history.RemoveAt(_history.Count - 1);
+            }
+        }
+
+        private void HandleEnterPress()
+        {
+            var currentEvent = Event.current;
+
+            if (currentEvent.type != EventType.KeyDown)
+            {
+                return;
+            }
+            
+            if (currentEvent.keyCode == KeyCode.Return)
+            {
+                if (_searchResults.Count > 0)
+                {
+                    if (_currentSelectedIndex >= _searchResults.Count)
+                        _currentSelectedIndex = 0;
+                    
+                    ButtonPressed(_searchResults[_currentSelectedIndex]);
+                }
+                
+                currentEvent.Use();
+            }
+        }
+        
+        private void HandleArrowPress()
+        {
+            var currentEvent = Event.current;
+            
+            if (currentEvent.type != EventType.KeyDown)
+            {
+                return;
+            }
+            
+            if (currentEvent.keyCode == KeyCode.DownArrow)
+            {
+                _currentSelectedIndex++;
+                currentEvent.Use();
+            }
+            
+            if (currentEvent.keyCode == KeyCode.UpArrow)
+            {
+                if (_currentSelectedIndex > 0)
+                {
+                    _currentSelectedIndex--;
+                }
+                currentEvent.Use();
             }
         }
         
