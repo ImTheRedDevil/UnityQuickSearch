@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Search;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace com.virtulope.quicksearch.Editor
 {
@@ -12,6 +11,7 @@ namespace com.virtulope.quicksearch.Editor
     {
         private const float WindowWidthPercent = 0.45f;
         private const float WindowHeightPercent = 0.40f;
+        private const float ButtonHeight = 20;
 
         private static GUIStyle _searchBoxStyle, _buttonStyle;
 
@@ -24,7 +24,9 @@ namespace com.virtulope.quicksearch.Editor
 
         private bool _showHistoryOnEnable;
 
-        private int _currentSelectedIndex = 0;
+        private int _currentSelectedIndex;
+
+        private Vector2 _scrollPosition = Vector2.zero;
         
         [MenuItem("Tools/QuickSearch %t")]
         public static void OpenSearch()
@@ -107,7 +109,8 @@ namespace com.virtulope.quicksearch.Editor
         {
             if (_currentSelectedIndex >= results.Count)
                 _currentSelectedIndex = results.Count - 1;
-            
+
+            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition);
             for (var i = 0; i < results.Count; i++)
             {
                 if (_currentSelectedIndex == i)
@@ -123,6 +126,7 @@ namespace com.virtulope.quicksearch.Editor
                 
                 GUI.backgroundColor = Color.white;
             }
+            GUILayout.EndScrollView();
         }
 
         private void ButtonPressed(string result)
@@ -169,6 +173,7 @@ namespace com.virtulope.quicksearch.Editor
                 case KeyCode.Tab:
                 case KeyCode.DownArrow:
                     _currentSelectedIndex++;
+                    SetScrollToCurrentSelected();
                     currentEvent.Use();
                     break;
                 case KeyCode.UpArrow:
@@ -176,6 +181,7 @@ namespace com.virtulope.quicksearch.Editor
                     {
                         _currentSelectedIndex--;
                     }
+                    SetScrollToCurrentSelected();
                     currentEvent.Use();
                     break;
                 case KeyCode.Escape:
@@ -194,6 +200,11 @@ namespace com.virtulope.quicksearch.Editor
                     
                 ButtonPressed(_searchResults[_currentSelectedIndex]);
             }
+        }
+
+        private void SetScrollToCurrentSelected()
+        {
+            _scrollPosition = new Vector2(0f, _currentSelectedIndex * ButtonHeight);
         }
 
         private static void InitStyles() {
