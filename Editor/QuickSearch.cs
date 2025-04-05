@@ -65,8 +65,7 @@ namespace com.virtulope.quicksearch.Editor
             if (_searchBoxStyle == null) {
                 InitStyles();
             }
-            HandleEnterPress();
-            HandleArrowPress();
+            HandleKeyboardButtons();
             
             GUI.SetNextControlName("searchbar");
             EditorGUI.BeginChangeCheck();
@@ -152,7 +151,7 @@ namespace com.virtulope.quicksearch.Editor
             }
         }
 
-        private void HandleEnterPress()
+        private void HandleKeyboardButtons()
         {
             var currentEvent = Event.current;
 
@@ -160,43 +159,40 @@ namespace com.virtulope.quicksearch.Editor
             {
                 return;
             }
-            
-            if (currentEvent.keyCode == KeyCode.Return)
+
+            switch (currentEvent.keyCode)
             {
-                if (_searchResults.Count > 0)
-                {
-                    if (_currentSelectedIndex >= _searchResults.Count)
-                        _currentSelectedIndex = 0;
-                    
-                    ButtonPressed(_searchResults[_currentSelectedIndex]);
-                }
-                
-                currentEvent.Use();
+                case KeyCode.Return:
+                    ReturnKeyPressed();
+                    currentEvent.Use();
+                    break;
+                case KeyCode.Tab:
+                case KeyCode.DownArrow:
+                    _currentSelectedIndex++;
+                    currentEvent.Use();
+                    break;
+                case KeyCode.UpArrow:
+                    if (_currentSelectedIndex > 0)
+                    {
+                        _currentSelectedIndex--;
+                    }
+                    currentEvent.Use();
+                    break;
+                case KeyCode.Escape:
+                    _window.Close();
+                    currentEvent.Use();
+                    break;
             }
         }
-        
-        private void HandleArrowPress()
+
+        private void ReturnKeyPressed()
         {
-            var currentEvent = Event.current;
-            
-            if (currentEvent.type != EventType.KeyDown)
+            if (_searchResults.Count > 0)
             {
-                return;
-            }
-            
-            if (currentEvent.keyCode == KeyCode.DownArrow)
-            {
-                _currentSelectedIndex++;
-                currentEvent.Use();
-            }
-            
-            if (currentEvent.keyCode == KeyCode.UpArrow)
-            {
-                if (_currentSelectedIndex > 0)
-                {
-                    _currentSelectedIndex--;
-                }
-                currentEvent.Use();
+                if (_currentSelectedIndex >= _searchResults.Count)
+                    _currentSelectedIndex = 0;
+                    
+                ButtonPressed(_searchResults[_currentSelectedIndex]);
             }
         }
 
