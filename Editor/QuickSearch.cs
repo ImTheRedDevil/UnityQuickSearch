@@ -119,7 +119,7 @@ namespace com.virtulope.quicksearch.Editor
                 }
                 
                 var assetPath = AssetDatabase.GUIDToAssetPath(results[i]);
-                if (GUILayout.Button(Path.GetFileName(assetPath), _buttonStyle))
+                if (GUILayout.Button(Path.GetFileName(assetPath), _buttonStyle, GUILayout.Height(ButtonHeight)))
                 {
                     ButtonPressed(results[i]);
                 }
@@ -144,10 +144,11 @@ namespace com.virtulope.quicksearch.Editor
 
         private void AddToHistory(string result)
         {
-            if (_history.Contains(result) && _history[0] != result)
+            if (_history.Contains(result))
             {
-                _history.Remove(result);
+                _history.RemoveAll(item => item == result);
             }
+            
             _history = _history.Prepend(result).ToList();
             if (_history.Count > 25)
             {
