@@ -117,14 +117,9 @@ namespace com.virtulope.quicksearch.Editor
             var mainObject = AssetDatabase.LoadMainAssetAtPath(assetPath);
             Selection.activeObject = mainObject;
             
-            OpenExternalAsset(mainObject);
+            AssetDatabase.OpenAsset(mainObject);
 
             _window.Close();
-        }
-        
-        private static void OpenExternalAsset(Object asset)
-        {
-            AssetDatabase.OpenAsset(asset);
         }
 
         private void AddToHistory(string result)
