@@ -11,34 +11,39 @@ namespace com.virtulope.quicksearch.Editor
     {
         private const float WindowWidthPercent = 0.45f;
         private const float WindowHeightPercent = 0.40f;
-        private const float ButtonHeight = 20;
+        private const int ResultSpacing = 3;
+        private const int ResultHeight = 18;
+        private const float ResultFileNameWidthPercentage = 0.4f;
 
-        private static GUIStyle _searchBoxStyle, _buttonStyle;
+        private static GUIStyle _searchBoxStyle, _resultStyle, _pathLabelStyle;
 
         private string _searchText = "";
 
         private List<string> _searchResults = new();
         private List<string> _history = new();
-
-        private static EditorWindow _window;
-
+        
         private bool _showHistoryOnEnable;
 
         private int _currentSelectedIndex;
 
         private Vector2 _scrollPosition = Vector2.zero;
+
+        private float VisibleScrollHeight => position.height - _searchBoxStyle.fixedHeight - 3;
+
+        private float CompleteResultHeight => ResultHeight + ResultSpacing + 5;
         
         [MenuItem("Tools/QuickSearch %t")]
         public static void OpenSearch()
         {
-            _window = GetWindow<QuickSearch>(true, "QuickSearch");
+            var window = GetWindow<QuickSearch>(true, "Quick Search");
+            window.titleContent = null;
             var mainWindow = EditorGUIUtility.GetMainWindowPosition();
             var width = mainWindow.width * WindowWidthPercent;
             var height = mainWindow.height * WindowHeightPercent;
-            _window.position = new Rect(mainWindow.center.x - width / 2f, mainWindow.center.y - height / 2f, 0, 0);
-            _window.maxSize = new Vector2(width, height);
-            _window.minSize = new Vector2(width, height);
-            _window.ShowPopup();
+            window.position = new Rect(mainWindow.center.x - width / 2f, mainWindow.center.y - height / 2f, 0, 0);
+            window.maxSize = new Vector2(width, height);
+            window.minSize = new Vector2(width, height);
+            window.Show();
         }
 
         public void OnEnable()
@@ -100,12 +105,12 @@ namespace com.virtulope.quicksearch.Editor
                 _searchResults = _history.ToList();
             }
 
-            SpawnButtons(_searchResults.ToList());
+            ShowResults(_searchResults.ToList());
 
             GUI.FocusControl("searchbar");
         }
 
-        private void SpawnButtons(List<string> results)
+        private void ShowResults(List<string> results)
         {
             if (_currentSelectedIndex >= results.Count)
                 _currentSelectedIndex = results.Count - 1;
@@ -119,14 +124,26 @@ namespace com.virtulope.quicksearch.Editor
                 }
                 
                 var assetPath = AssetDatabase.GUIDToAssetPath(results[i]);
-                if (GUILayout.Button(Path.GetFileName(assetPath), _buttonStyle, GUILayout.Height(ButtonHeight)))
-                {
-                    ButtonPressed(results[i]);
-                }
+                
+                ShowResult(assetPath);
                 
                 GUI.backgroundColor = Color.white;
             }
             GUILayout.EndScrollView();
+        }
+
+        private void ShowResult(string assetPath)
+        {
+            GUILayout.BeginHorizontal(_resultStyle, GUILayout.Height(ResultHeight));
+
+            var image = AssetDatabase.GetCachedIcon(assetPath);
+            GUILayout.Label(image, GUILayout.Height(ResultHeight), GUILayout.Width(ResultHeight + 5));
+            
+            GUILayout.Label(Path.GetFileName(assetPath), GUILayout.Height(ResultHeight), GUILayout.Width(ResultFileNameWidthPercentage * position.width));
+            
+            GUILayout.Label(assetPath, _pathLabelStyle, GUILayout.Height(ResultHeight));
+            
+            GUILayout.EndHorizontal();
         }
 
         private void ButtonPressed(string result)
@@ -139,7 +156,7 @@ namespace com.virtulope.quicksearch.Editor
             
             AssetDatabase.OpenAsset(mainObject);
 
-            _window.Close();
+            Close();
         }
 
         private void AddToHistory(string result)
@@ -186,7 +203,7 @@ namespace com.virtulope.quicksearch.Editor
                     currentEvent.Use();
                     break;
                 case KeyCode.Escape:
-                    _window.Close();
+                    Close();
                     currentEvent.Use();
                     break;
             }
@@ -205,7 +222,18 @@ namespace com.virtulope.quicksearch.Editor
 
         private void SetScrollToCurrentSelected()
         {
-            _scrollPosition = new Vector2(0f, _currentSelectedIndex * ButtonHeight);
+            var maxResults = (int)Mathf.Floor(VisibleScrollHeight / CompleteResultHeight);
+
+            var scroll = (_currentSelectedIndex + 1) - maxResults;
+            if (scroll > 0 && scroll * CompleteResultHeight > _scrollPosition.y)
+            {
+                _scrollPosition = new Vector2(0f, scroll * CompleteResultHeight);
+            }
+
+            if (_scrollPosition.y > _currentSelectedIndex * CompleteResultHeight)
+            {
+                _scrollPosition = new Vector2(0f, _currentSelectedIndex * CompleteResultHeight);
+            }
         }
 
         private static void InitStyles() {
@@ -216,10 +244,18 @@ namespace com.virtulope.quicksearch.Editor
             };
             _searchBoxStyle.fixedHeight = _searchBoxStyle.lineHeight * 1.6f;
 
-            _buttonStyle = new GUIStyle(GUI.skin.button)
+            _resultStyle = new GUIStyle(GUI.skin.box)
             {
                 alignment = TextAnchor.MiddleLeft,
-                margin = new RectOffset(0, 0, 0, 0),
+                margin = new RectOffset(0, 0, 0, ResultSpacing),
+            };
+
+            _pathLabelStyle = new GUIStyle(GUI.skin.label)
+            {
+                normal =
+                {
+                    textColor = Color.gray
+                }
             };
         }
         
