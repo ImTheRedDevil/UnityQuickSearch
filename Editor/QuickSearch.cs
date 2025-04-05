@@ -13,6 +13,8 @@ namespace com.virtulope.quicksearch.Editor
         private const float WindowWidthPercent = 0.45f;
         private const float WindowHeightPercent = 0.40f;
 
+        private static GUIStyle _searchBoxStyle;
+
         private string _searchText = "";
 
         private List<string> _searchResults = new();
@@ -60,12 +62,18 @@ namespace com.virtulope.quicksearch.Editor
 
         public void OnGUI()
         {
+            if (_searchBoxStyle == null) {
+                InitStyles();
+            }
             HandleEnterPress();
             HandleArrowPress();
             
             GUI.SetNextControlName("searchbar");
             EditorGUI.BeginChangeCheck();
-            _searchText = GUILayout.TextField(_searchText);
+            
+            _searchText = GUILayout.TextField(_searchText, _searchBoxStyle);
+            EditorGUILayout.Space();
+            
             if (EditorGUI.EndChangeCheck())
             {
                 _currentSelectedIndex = 0;
@@ -190,6 +198,15 @@ namespace com.virtulope.quicksearch.Editor
                 }
                 currentEvent.Use();
             }
+        }
+
+        private static void InitStyles() {
+            _searchBoxStyle = new GUIStyle(GUI.skin.textField)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                margin = new RectOffset(0, 0, 0, 0)
+            };
+            _searchBoxStyle.fixedHeight = _searchBoxStyle.lineHeight * 1.6f;
         }
         
         public class QuickSearchSingleton : ScriptableSingleton<QuickSearchSingleton>
